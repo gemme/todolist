@@ -1,80 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import TodoList from './TodoList';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 
-const todos = [
-  {
-    id: 1,
-    value: 'Work',
-    date: new Date().toDateString(),
-    complete: false
-  },
-  {
-    id: 2,
-    value: 'Node',
-    date: new Date().toDateString(),
-    complete: false
-  },
-  {
-    id: 3,
-    value: 'Masters degree',
-    date: new Date().toDateString(),
-    complete: false
-  },
-  {
-    id: 4,
-    value: 'Homework',
-    date: new Date().toDateString(),
-    complete: false
-  }
-];
-
 function App() {
-  const [todo, setTodo] = useState('');
-  const [myTodos, setMyTodos] = useState(todos);
-  console.log(myTodos);
-  console.log(todo);
+  const [value, setValue] = useState('');
+  const [myTodos, setMyTodos] = useState([]);
+  useEffect(() => {
+    fetch('http://localhost:3005/todo', {
+      method: 'GET'
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        setMyTodos(data);
+      })
+      .catch(err => console.log(err));
+  }, []);
+
   return (
-    <div className="App">
-     <Box
-      component="form"
-      sx={{
-        '& > :not(style)': { m: 1, width: '25ch' },
-      }}
-      noValidate
-      autoComplete="off"
-    >
+    <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column'
+    }}
+    className="App">
       <TodoList myTodos={myTodos}/>
       <TextField 
         id="outlined-basic"
         label="Add Todo"
         variant="outlined"
-        value={todo}
-        onChange={event => setTodo(event.target.value)}
-        onKeyDown={event => {
-          if(event.key === 'Enter') {
-          console.log('Enter');
-          event.preventDefault();
-            setMyTodos(state => {
-              return [
-                ...state,
-                {
-                  id: state.id + 1,
-                  value: todo,
-                  date: new Date().toDateString(),
-                  complete: false
-                }
-              ]
-            });
-            setTodo('');
-          }
-          
-        }}
+        value={value}
+        onChange={event => setValue(event.target.value)}
         />
-    </Box>
-     
+        <Button variant="contained" onClick={() => {
+          fetch('http://localhost:3005/todo', {
+            method: 'POST',
+            body: JSON.stringify({
+                id: Date.now(),
+                value: value,
+                date: new Date().toDateString(),
+                complete: false
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              console.log(data);
+              setMyTodos(state => {
+                return [
+                  ...state,
+                  data
+                ]
+              });
+              setValue('');
+            })
+            .catch(err => console.log(err));
+        }}>Add</Button>
     </div>
   );
 }
