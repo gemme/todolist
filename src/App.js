@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import TodoList from './TodoList';
 import Box from '@mui/material/Box';
@@ -33,7 +33,12 @@ const todos = [
 
 function App() {
   const [todo, setTodo] = useState('');
-  const [myTodos, setMyTodos] = useState(todos);
+  const [myTodos, setMyTodos] = useState([]);
+  useEffect(() => {
+    fetch('http://localhost:3000/todo')
+      .then(response => response.json())
+      .then(data => setMyTodos(data))
+  });
   console.log(myTodos);
   console.log(todo);
   return (
@@ -57,18 +62,25 @@ function App() {
           if(event.key === 'Enter') {
           console.log('Enter');
           event.preventDefault();
-            setMyTodos(state => {
-              return [
-                ...state,
-                {
-                  id: state.id + 1,
-                  value: todo,
-                  date: new Date().toDateString(),
-                  complete: false
-                }
-              ]
+          fetch('http://localhost:3000/todo', {
+            method: 'POST',
+            body: JSON.stringify({
+              id:  myTodos.length + 1,
+              value: todo,
+              date: new Date().toDateString(),
+              complete: false
+            })
+          })
+            .then(response => response.json())
+            .then(todo => {
+              setMyTodos(state => {
+                return [
+                  ...state,
+                  todo
+                ]
+              });
+              setTodo('');
             });
-            setTodo('');
           }
           
         }}
